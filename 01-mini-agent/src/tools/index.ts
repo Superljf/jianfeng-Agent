@@ -11,7 +11,7 @@ export const toolDefinitions: ToolDefinition[] = [
       parameters: {
         type: "object",
         properties: {
-          path: { type: "string", description: "相对工作区根目录的路径" },
+          path: { type: "string", description: "相对工作区根目录，例如 hello.ts，不要加 playground/" },
         },
         required: ["path"],
       },
@@ -22,11 +22,11 @@ export const toolDefinitions: ToolDefinition[] = [
     function: {
       name: "edit",
       description:
-        "修改工作区内的文本文件。old_text 为空时创建或覆盖整个文件；否则必须在文件中恰好出现一次后再替换。",
+        "创建或修改工作区内的文本文件。没有单独的 write 工具。old_text 为空时创建或覆盖整个文件；否则必须在文件中恰好出现一次后再替换。path 写 hello.ts，不要写 playground/hello.ts。",
       parameters: {
         type: "object",
         properties: {
-          path: { type: "string" },
+          path: { type: "string", description: "相对工作区根目录，例如 hello.ts" },
           old_text: { type: "string" },
           new_text: { type: "string" },
         },
@@ -67,7 +67,8 @@ export async function executeTool(
 ): Promise<string> {
   try {
     const args = JSON.parse(rawArguments) as Record<string, unknown>;
-    switch (name) {
+    const toolName = name === "write" ? "edit" : name;
+    switch (toolName) {
       case "read":
         return await readFileInRoot(root, asString(args.path, "path"));
       case "edit":

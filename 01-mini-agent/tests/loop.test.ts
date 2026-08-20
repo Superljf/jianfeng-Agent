@@ -33,6 +33,20 @@ describe("executeTool", () => {
     );
     assert.equal(await readFile(path.join(root, "hello.ts"), "utf8"), "console.log('ok');\n");
   });
+
+  it("write 视为 edit，且 playground/ 前缀写到工作区根", async () => {
+    const root = await tempRoot();
+    await executeTool(
+      root,
+      "write",
+      JSON.stringify({
+        path: "playground/hello.ts",
+        old_text: "",
+        new_text: "console.log('o111k');\n",
+      }),
+    );
+    assert.equal(await readFile(path.join(root, "hello.ts"), "utf8"), "console.log('o111k');\n");
+  });
 });
 
 describe("runAgent", () => {

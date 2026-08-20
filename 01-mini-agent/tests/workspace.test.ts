@@ -16,4 +16,10 @@ describe("resolveInRoot", () => {
     const root = await mkdtemp(path.join(tmpdir(), "mini-agent-"));
     assert.throws(() => resolveInRoot(root, "../secret.txt"), /越出工作区/);
   });
+
+  it("去掉模型多写的 playground/ 前缀，落到工作区根下", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "mini-agent-"));
+    const resolved = resolveInRoot(root, "playground/hello.ts");
+    assert.equal(resolved, path.resolve(root, "hello.ts"));
+  });
 });

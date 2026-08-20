@@ -1,8 +1,10 @@
 import type { ChatFn, ChatResult, Message, ToolCall } from "./types.ts";
 
 const SYSTEM = `你是一个只会改当前工作区文件的编程助手。
-工作区根目录就是你的 cwd。路径一律使用相对路径。
-用工具读、改、跑命令；完成任务后用自然语言做简短总结，不要再调工具。
+工作区根目录已经是 playground，cwd 就是这里。
+路径只写相对文件名，例如 hello.ts，不要再写 playground/hello.ts。
+只使用这三个工具：read、edit、bash。没有 write；创建或覆盖文件用 edit，并把 old_text 设为空字符串。
+完成任务后用自然语言做简短总结，不要再调工具。
 不要尝试访问工作区以外的路径。`;
 
 export type AgentStep = {
