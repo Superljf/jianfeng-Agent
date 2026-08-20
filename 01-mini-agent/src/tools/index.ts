@@ -2,6 +2,15 @@ import type { ToolDefinition } from "../types.ts";
 import { runCommand } from "./bash.ts";
 import { editFileInRoot, readFileInRoot } from "./files.ts";
 
+/**
+ * 【模型看见的菜单】
+ *
+ * 这份数组会原样放进 DeepSeek 请求的 `tools` 字段（见 llm.ts）。
+ * 模型不会执行这里的 TypeScript，它只根据 name / description / parameters
+ * 决定「下一句要调用哪个工具、参数填什么」。
+ *
+ * 可以把它想成后端的 OpenAPI：描述越清楚，模型乱发明 write、乱加 playground/ 的概率越低。
+ */
 export const toolDefinitions: ToolDefinition[] = [
   {
     type: "function",
@@ -58,7 +67,15 @@ function asString(value: unknown, key: string): string {
 }
 
 /**
- * 执行模型给出的工具调用。执行失败时返回错误文本，不中断循环。
+ * 【TS 真正动手的地方】
+ *
+ * loop.ts 在模型返回 tool_calls 之后会调用这里。
+ *
+ * @param root 工作区绝对路径，入口里传的是 .../playground
+ * @param name 模型点的工具名，例如 "edit" 或它瞎编的 "write"
+ * @param rawArguments 模型给的 JSON 字符串，还不是对象，所以要 JSON.parse
+ * @returns 一段普通文字。成功、失败都返回字符串，再由 loop 塞回 messages。
+ *          绝不要在这里把整个 Agent 进程 throw 死掉，否则模型没法改主意。
  */
 export async function executeTool(
   root: string,
@@ -67,6 +84,7 @@ export async function executeTool(
 ): Promise<string> {
   try {
     const args = JSON.parse(rawArguments) as Record<string, unknown>;
+    // 模型常发明一个叫 write 的工具；菜单里没有，这里当成 edit，避免空转一轮。
     const toolName = name === "write" ? "edit" : name;
     switch (toolName) {
       case "read":
@@ -81,6 +99,7 @@ export async function executeTool(
       case "bash":
         return await runCommand(root, asString(args.command, "command"));
       default:
+        // 这句话会作为 tool 结果出现在下一轮对话里，模型才知道自己点错了。
         return `未知工具: ${name}`;
     }
   } catch (error) {

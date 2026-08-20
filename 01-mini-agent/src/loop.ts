@@ -24,6 +24,9 @@ export type RunAgentOptions = {
 
 /**
  * 核心循环：问模型 → 若有 tool_calls 就执行并回填 → 直到模型只说话或达到步数上限。
+ *
+ * tool_calls 可以想成模型点的「按钮」。有按钮就去 src/tools 里执行；
+ * 没按钮只剩一段文字，就是最终答案，循环结束。
  */
 export async function runAgent(options: RunAgentOptions): Promise<string> {
   const maxSteps = options.maxSteps ?? 20;
@@ -39,6 +42,7 @@ export async function runAgent(options: RunAgentOptions): Promise<string> {
       return reply.content?.trim() || "(模型没有返回文本)";
     }
 
+    // 必须先把「我调用了这些工具」记进历史，模型和 OpenAI 协议才能把后续 tool 结果对上号。
     messages.push({
       role: "assistant",
       content: reply.content,
@@ -46,6 +50,7 @@ export async function runAgent(options: RunAgentOptions): Promise<string> {
     });
 
     for (const call of toolCalls) {
+      // 【分界】这里离开模型，进入你的 TS。call.arguments 仍是 JSON 字符串。
       const result = await options.execute(call.name, call.arguments);
       options.onStep?.({
         step,
@@ -53,6 +58,7 @@ export async function runAgent(options: RunAgentOptions): Promise<string> {
         arguments: call.arguments,
         result,
       });
+      // 结果变成 role: "tool" 的消息。下一轮模型能看见「上次工具跑出了什么」。
       messages.push({
         role: "tool",
         tool_call_id: call.id,

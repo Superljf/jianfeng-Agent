@@ -2,14 +2,21 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { resolveInRoot } from "../workspace.ts";
 
-/** 读取工作区内的文本文件。 */
+/**
+ * 【TS】把磁盘上的文件读成字符串，交给模型当「眼睛」。
+ * 路径会先过 resolveInRoot：禁止 ../，并剥掉多余的 playground/ 前缀。
+ */
 export async function readFileInRoot(root: string, relativePath: string): Promise<string> {
   const filePath = resolveInRoot(root, relativePath);
   return readFile(filePath, "utf8");
 }
 
 /**
- * 在工作区内改文件：`oldText` 为空则创建/覆盖；否则必须精确出现一次再替换。
+ * 【TS】真正改文件。模型只传来三个字符串，不会自己碰 fs。
+ *
+ * - oldText === "" → 创建或整文件覆盖（模型想「新建」时用这个）
+ * - 否则 → 旧文本必须在文件里恰好出现 1 次，再换成 newText
+ *   （出现 0 次或 2 次都抛错，executeTool 会把错误变成字符串还给模型）
  */
 export async function editFileInRoot(
   root: string,

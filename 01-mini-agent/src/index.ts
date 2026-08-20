@@ -73,6 +73,7 @@ async function main(): Promise<void> {
   const answer = await runAgent({
     task,
     chat,
+    // playground 才是工作区根。模型说 hello.ts，实际文件是 playground/hello.ts。
     execute: (name, rawArguments) => executeTool(playground, name, rawArguments),
     onStep: ({ step, tool, arguments: args, result }) => {
       console.log(`\n[step ${step}] ${tool} ${args}`);

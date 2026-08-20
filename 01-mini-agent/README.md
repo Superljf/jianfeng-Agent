@@ -4,6 +4,8 @@
 
 默认三个工具：`read`、`edit`、`bash`。Agent 只能改 `playground/`，避免误伤其它项目。
 
+看不懂 tools 时先打开 [怎么读tools.md](./怎么读tools.md)，再对照 `src/tools/` 里带 `【模型】` / `【TS】` 的注释。
+
 ## 准备
 
 需要 Node.js 22+。复制环境变量并填入 [DeepSeek API Key](https://platform.deepseek.com/)：

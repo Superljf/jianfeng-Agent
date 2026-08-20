@@ -66,6 +66,7 @@ export function createDeepSeekChat(options: DeepSeekOptions): ChatFn {
       body: JSON.stringify({
         model: options.model,
         messages: toWireMessages(messages),
+        // 【模型的菜单】没有这一行，模型只能纯聊天，不会返回 tool_calls。
         tools: toolDefinitions,
       }),
     });
